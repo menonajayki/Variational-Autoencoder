@@ -22,8 +22,7 @@ mean = layers.Dense(latent_dim, name="mean")(x)
 log_var = layers.Dense(latent_dim, name="log_var")(x)
 z = Sampling()([mean, log_var])
 encoder = keras.Model(encoder_inputs, [mean, log_var, z], name="encoder")
-encoder.summary()
-print("\n")
+
 latent_inputs = keras.Input(shape=(latent_dim,))
 x = layers.Dense(7 * 7 * 64, activation="relu")(latent_inputs)
 x = layers.Reshape((7, 7, 64))(x)
@@ -31,7 +30,6 @@ x = layers.Conv2DTranspose(128, 3, activation="relu", strides=2, padding="same")
 x = layers.Conv2DTranspose(64, 3, activation="relu", strides=2, padding="same")(x)
 decoder_outputs = layers.Conv2DTranspose(1, 3, activation="sigmoid", padding="same")(x)
 decoder = keras.Model(latent_inputs, decoder_outputs, name="decoder")
-decoder.summary()
 
 class VAE(keras.Model):
     def __init__(self, encoder, decoder, **kwargs):
@@ -74,10 +72,25 @@ class VAE(keras.Model):
             "kl_loss": self.kl_loss_tracker.result(),
         }
 
+# Load and Prepare Fashion MNIST Dataset
 (x_train, _), (x_test, _) = keras.datasets.fashion_mnist.load_data()
 fashion_mnist = np.concatenate([x_train, x_test], axis=0)
 fashion_mnist = np.expand_dims(fashion_mnist, -1).astype("float32") / 255
 
+# Create VAE Model Instance
 vae = VAE(encoder, decoder)
 vae.compile(optimizer=keras.optimizers.Adam())
+
+# Train VAE Model
 vae.fit(fashion_mnist, epochs=1, batch_size=128)
+
+# Save the weights to a file
+vae.save_weights('vae_weights.weights.h5')
+
+# Create a new instance of the VAE model
+new_vae = VAE(encoder, decoder)
+
+# Load the weights from the file
+new_vae.load_weights('vae_weights.weights.h5')
+
+# Now new_vae will have the same weights as the original trained model

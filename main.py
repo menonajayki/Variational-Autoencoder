@@ -3,6 +3,12 @@ import numpy as np
 import matplotlib.pyplot as plt
 import keras
 
+# Create an instance of the VAE model
+vae_model = vae.VAE(vae.encoder, vae.decoder)
+
+# Load the saved weights into the model
+vae_model.load_weights('vae_weights.weights.h5')
+
 def plot_latent_space(vae, n=10, figsize=5):
     img_size = 28
     scale = 0.5
@@ -34,9 +40,6 @@ def plot_latent_space(vae, n=10, figsize=5):
     plt.show()
 
 
-plot_latent_space(vae.vae)
-
-
 def plot_label_clusters(encoder, decoder, data, test_lab):
     z_mean, _, _ = encoder.predict(data)
     plt.figure(figsize=(12, 10))
@@ -60,4 +63,9 @@ labels = {0: "T-shirt / top",
 
 (x_train, y_train), _ = keras.datasets.fashion_mnist.load_data()
 x_train = np.expand_dims(x_train, -1).astype("float32") / 255
-plot_label_clusters(vae.encoder, vae.decoder, x_train, y_train)
+
+# Plot Latent Space
+plot_latent_space(vae_model, n=10, figsize=5)
+
+# Plot Label Clusters
+plot_label_clusters(vae_model.encoder, vae_model.decoder, x_train, y_train)
